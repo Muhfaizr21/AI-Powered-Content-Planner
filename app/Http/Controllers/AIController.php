@@ -1,33 +1,49 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\OpenAIService;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class AIController extends Controller
 {
-    protected $openai;
-
-    public function __construct(OpenAIService $openai)
-    {
-        $this->openai = $openai;
-    }
-
     public function generate(Request $request)
     {
-        $request->validate(['theme' => 'required|string|max:255', 'count' => 'nullable|int|min:1|max:10']);
-        $count = $request->input('count', 5);
-        $theme = $request->input('theme');
+        $request->validate([
+            'theme' => 'required|string|max:255',
+        ]);
 
-        // call service
-        $ideas = $this->openai->generateIdeas($theme, $count);
+        try {
+            // 🔹 Panggil OpenAI API
+            $response = Http::withToken(env('OPENAI_API_KEY'))->post(
+                'https://api.openai.com/v1/chat/completions',
+                [
+                    'model' => 'gpt-3.5-turbo',
+                    'messages' => [
+                        ['role' => 'system', 'content' => 'You are a professional content strategist.'],
+                        ['role' => 'user', 'content' => 'Generate 5 content ideas for: ' . $request->theme],
+                    ],
+                ]
+            );
 
-        // we can optionally cache the result to avoid re-calls (cache key = user + theme + timestamp granularity)
-        $cacheKey = 'openai_ideas_'.md5($theme.'_'.Auth::id());
-        cache()->put($cacheKey, $ideas, now()->addMinutes(30));
+            if ($response->failed()) {
+                Log::error('AI API failed', ['response' => $response->body()]);
+                return response()->json(['error' => 'AI request failed'], 500);
+            }
 
-        return response()->json(['ideas' => $ideas]);
+            $data = $response->json();
+
+            $ideas = $data['choices'][0]['message']['content'] ?? 'No ideas generated.';
+
+            return response()->json([
+                'theme' => $request->theme,
+                'ideas' => $ideas,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('AI Generation Error', ['message' => $e->getMessage()]);
+            return response()->json(['error' => 'Something went wrong: ' . $e->getMessage()], 500);
+        }
     }
 }
