@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Content;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ContentController extends Controller
@@ -30,26 +31,32 @@ class ContentController extends Controller
 
     // 🔹 Proses simpan ide konten baru
     public function store(Request $request)
-    {
-        $request->validate([
-            'theme' => 'required|string|max:255',
-        ]);
+{
+    $request->validate([
+        'theme' => 'required|string|max:255',
+    ]);
 
-        $response = Http::withToken(env('OPENAI_API_KEY'))->post('https://api.openai.com/v1/chat/completions', [
-            'model' => 'gpt-3.5-turbo',
-            'messages' => [
-                ['role' => 'system', 'content' => 'You are a content planning assistant.'],
-                ['role' => 'user', 'content' => 'Give me 5 content ideas for: ' . $request->theme],
-            ],
-        ]);
+    $response = Http::withToken(env('OPENAI_API_KEY'))->post('https://api.openai.com/v1/chat/completions', [
+        'model' => 'gpt-3.5-turbo',
+        'messages' => [
+            ['role' => 'system', 'content' => 'You are a content planning assistant.'],
+            ['role' => 'user', 'content' => 'Give me 5 content ideas for: ' . $request->theme],
+        ],
+    ]);
 
-        $ideas = json_decode($response->body(), true)['choices'][0]['message']['content'] ?? 'No ideas generated.';
+    // 🔍 Tambahkan ini untuk debugging
+ Log::info('OpenAI Response RAW:', ['response' => $response->body()]);
 
-        $content = Content::create([
-            'theme' => $request->theme,
-            'ideas' => $ideas,
-        ]);
 
-        return redirect()->route('content.index')->with('success', 'Content ideas generated!');
-    }
+    $data = $response->json();
+    $ideas = $data['choices'][0]['message']['content'] ?? 'No ideas generated.';
+
+    $content = Content::create([
+        'theme' => $request->theme,
+        'ideas' => $ideas,
+    ]);
+
+    return redirect()->route('content.index')->with('success', 'Content ideas generated!');
+}
+
 }
