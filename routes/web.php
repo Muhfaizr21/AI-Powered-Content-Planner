@@ -7,7 +7,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\AIController;
 use App\Http\Controllers\ContentController;
 use App\Http\Controllers\ScheduleController;
-
+use Illuminate\Support\Facades\Http;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -38,5 +38,18 @@ Route::middleware(['auth','verified'])->group(function () {
 Route::post('ai/generate', [AIController::class,'generate'])->middleware('throttle:5,1'); // 5 requests per minute
 Route::resource('contents', ContentController::class)->only(['index', 'store']);
 
+
+Route::resource('content', ContentController::class);
+
+Route::get('/test-ai', function () {
+    $response = Http::withToken(env('OPENAI_API_KEY'))->post('https://api.openai.com/v1/chat/completions', [
+        'model' => 'gpt-3.5-turbo',
+        'messages' => [
+            ['role' => 'user', 'content' => 'Give me 3 content ideas about technology startups'],
+        ],
+    ]);
+
+    return $response->json();
+});
 
 require __DIR__.'/auth.php';

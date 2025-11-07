@@ -12,23 +12,29 @@ class ContentController extends Controller
 {
     use AuthorizesRequests;
 
-    // Halaman form buat generate ide konten
+    // 🔹 Halaman daftar ide konten
+    public function index()
+    {
+        $contents = Content::latest()->get();
+
+        return Inertia::render('ContentIdeas/Index', [
+            'contents' => $contents
+        ]);
+    }
+
+    // 🔹 Halaman form buat generate ide baru
     public function create()
     {
         return Inertia::render('ContentIdeas/Create');
     }
 
-    // Simpan hasil ide konten dari AI
+    // 🔹 Proses simpan ide konten baru
     public function store(Request $request)
     {
-        // 🔹 Untuk sementara nonaktifkan policy
-        // $this->authorize('create', Content::class);
-
         $request->validate([
             'theme' => 'required|string|max:255',
         ]);
 
-        // 🔹 Panggil OpenAI API untuk generate ide
         $response = Http::withToken(env('OPENAI_API_KEY'))->post('https://api.openai.com/v1/chat/completions', [
             'model' => 'gpt-3.5-turbo',
             'messages' => [
@@ -39,12 +45,11 @@ class ContentController extends Controller
 
         $ideas = json_decode($response->body(), true)['choices'][0]['message']['content'] ?? 'No ideas generated.';
 
-        // 🔹 Simpan hasil ke database
         $content = Content::create([
             'theme' => $request->theme,
             'ideas' => $ideas,
         ]);
 
-        return redirect()->back()->with('success', 'Content ideas generated!');
+        return redirect()->route('content.index')->with('success', 'Content ideas generated!');
     }
 }
