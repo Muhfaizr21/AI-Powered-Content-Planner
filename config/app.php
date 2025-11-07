@@ -104,6 +104,9 @@ return [
             explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
         ),
     ],
+    'openai' => [
+    'key' => env('OPENAI_API_KEY'),
+],
 
     /*
     |--------------------------------------------------------------------------
