@@ -1,29 +1,36 @@
-import { Link } from '@inertiajs/react'
+import { Link } from "@inertiajs/react";
 
 export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center px-6">
-      <div className="max-w-2xl w-full bg-gray-800 shadow-xl rounded-2xl p-8 text-center border border-gray-700">
-        <h1 className="text-3xl font-bold mb-3 tracking-tight">
-          ⚡ Dashboard
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex flex-col items-center justify-center px-6 relative overflow-hidden">
+      {/* Efek background subtle */}
+      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.2),transparent_70%)]"></div>
+
+      {/* Kartu utama */}
+      <div className="relative max-w-2xl w-full bg-gray-900/80 backdrop-blur-md border border-gray-700 shadow-2xl rounded-3xl p-10 text-center">
+        <h1 className="text-4xl font-extrabold mb-3 tracking-tight bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+          🚀 FaizLabs Dashboard
         </h1>
-        <p className="text-gray-300 mb-8 text-lg">
-          You're logged in — ready to create your next viral idea.
+        <p className="text-gray-400 mb-8 text-lg">
+          You’re logged in, <span className="text-blue-400 font-semibold">Tuan Faiz</span> —
+          time to craft your next viral masterpiece.
         </p>
 
         <div className="flex justify-center">
           <Link
-            href="/contents"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200"
+            href="/contents/create"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] shadow-lg shadow-blue-600/30"
           >
-            Go to Content Planner 🚀
+            Open Content Planner ⚡
           </Link>
         </div>
       </div>
 
-      <footer className="mt-10 text-gray-500 text-sm">
-        © {new Date().getFullYear()} FaizLabs — AI-Powered Innovation
+      {/* Footer */}
+      <footer className="mt-12 text-gray-500 text-sm text-center">
+        © {new Date().getFullYear()} <span className="text-blue-400 font-semibold">FaizLabs</span>
+        — AI-Powered Innovation for the Next Generation
       </footer>
     </div>
-  )
+  );
 }

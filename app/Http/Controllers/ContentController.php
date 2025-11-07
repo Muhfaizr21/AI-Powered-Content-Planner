@@ -9,11 +9,36 @@ use Inertia\Inertia;
 
 class ContentController extends Controller
 {
+    /**
+     * 🔹 Tampilkan daftar semua konten (halaman Index)
+     */
+    public function index()
+    {
+        $contents = Content::latest()->get();
+
+        return Inertia::render('Contents/Index', [
+            'contents' => $contents,
+        ]);
+    }
+
+    /**
+     * 🔹 Halaman form input tema (Create page)
+     */
+    public function create()
+    {
+        return Inertia::render('Contents/Create');
+    }
+
+    /**
+     * 🔹 Simpan tema & hasil AI ke database
+     */
     public function store(Request $request)
     {
-        $request->validate(['theme' => 'required|string|max:255']);
+        $request->validate([
+            'theme' => 'required|string|max:255',
+        ]);
 
-        // Kirim ke OpenAI API
+        // Panggil API OpenAI
         $response = Http::withToken(env('OPENAI_API_KEY'))->post('https://api.openai.com/v1/chat/completions', [
             'model' => 'gpt-3.5-turbo',
             'messages' => [
@@ -24,25 +49,25 @@ class ContentController extends Controller
 
         $ideas = $response->json('choices.0.message.content') ?? 'No ideas generated.';
 
-        // Simpan ke database
+        // Simpan hasil ke DB
         $content = Content::create([
             'theme' => $request->theme,
             'ideas' => $ideas,
         ]);
 
-        // Redirect ke halaman hasil
-        return redirect()->route('contents.show', $content->id);
-    }
-
-    public function show(Content $content)
-    {
-        return inertia('ContentIdeas/Show', [
-            'content' => $content
+        // ✅ Langsung render halaman hasil
+        return Inertia::render('Contents/Show', [
+            'content' => $content,
         ]);
     }
-    public function create()
-{
-    return Inertia::render('Contents/Create');
-}
 
+    /**
+     * 🔹 Tampilkan 1 hasil ide (halaman detail)
+     */
+    public function show(Content $content)
+    {
+        return Inertia::render('Contents/Show', [
+            'content' => $content,
+        ]);
+    }
 }
